@@ -72,8 +72,7 @@ demo = gr.Interface(
     inputs=gr.File(label="Upload Original DOCX (Red Herring Prospectus)"),
     outputs=gr.File(label="Download Redacted DOCX"),
     title="GhostWriter PII Redaction Engine (ZeroGPU Accelerated)",
-    description="Upload a `.docx` financial document. The local NLP engine will automatically detect and anonymize all PII using stateful synthetic surrogates while perfectly preserving table and paragraph formatting. Accelerated by Hugging Face ZeroGPU.",
-    allow_flagging="never"
+    description="Upload a `.docx` financial document. The local NLP engine will automatically detect and anonymize all PII using stateful synthetic surrogates while perfectly preserving table and paragraph formatting. Accelerated by Hugging Face ZeroGPU."
 )
 
 if __name__ == "__main__":
