@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+.env
+*.docx
+!Evaluation_Report.docx
+.DS_Store

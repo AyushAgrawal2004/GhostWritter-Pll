@@ -1,0 +1,25 @@
+[
+  {
+    "text": "The Book Running Lead Manager is SEBI, and Rashi Patil works there at rashi.patil@gmail.com, phone number 555-123-4567.",
+    "entities": [
+      {
+        "entity_type": "NAME",
+        "start": 43,
+        "end": 54,
+        "text": "Rashi Patil"
+      },
+      {
+        "entity_type": "EMAIL",
+        "start": 70,
+        "end": 92,
+        "text": "rashi.patil@gmail.com"
+      },
+      {
+        "entity_type": "PHONE",
+        "start": 107,
+        "end": 119,
+        "text": "555-123-4567"
+      }
+    ]
+  }
+]
