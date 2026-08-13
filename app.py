@@ -22,7 +22,7 @@ WHITELIST = [
     "National Stock Exchange of India Limited", "ISSUER'S"
 ]
 
-@spaces.GPU
+@spaces.GPU(duration=50)
 def redact_document(input_file):
     if input_file is None:
         return None
