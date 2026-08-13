@@ -1,8 +1,28 @@
 import os
 import tempfile
-import subprocess
 import gradio as gr
+import spaces
 
+from src.detectors.hybrid_detector import HybridDetector
+from src.redactors.mapper import StatefulMapper
+from src.redactors.docx_handler import DocxHandler
+
+WHITELIST = [
+    "Cap Price", "Floor Price", "Offer Price", "Book Building Process", 
+    "Cut-off Price", "Red Herring Prospectus", "Equity Shares", 
+    "Offer for Sale", "Fresh Issue", "SEBI", "BSE", "NSE", "Companies Act",
+    "Selling Shareholder", "Selling Shareholders", "Promoter Selling Shareholder", 
+    "Company Secretary", "Compliance Officer", "Book Running Lead Manager", 
+    "Statutory Auditors", "Chartered Accountants",
+    "REGISTERED OFFICE", "CORPORATE OFFICE", "CONTACT PERSON", 
+    "E-MAIL AND TELEPHONE", "WEBSITE", "DETAILS OF THE OFFER TO PUBLIC", 
+    "TYPE", "SIZE OF THE FRESH ISSUE", "TOTAL OFFER SIZE", 
+    "ELIGIBILITY AND SHARE RESERVATION", "Qualified Institutional Buyers", 
+    "Retail Individual Investors", "Stock Exchanges", "BSE Limited", 
+    "National Stock Exchange of India Limited", "ISSUER'S"
+]
+
+@spaces.GPU
 def redact_document(input_file):
     if input_file is None:
         return None
@@ -20,21 +40,21 @@ def redact_document(input_file):
             
         original_filename = os.path.basename(file_path)
         if not original_filename.endswith('.docx'):
-            # In Gradio, we can raise an error that shows in the UI
             raise gr.Error("Only .docx files are supported.")
             
         temp_output_path = os.path.join(temp_dir, f"redacted_output.docx")
 
-        # Execute the main.py script
-        result = subprocess.run(
-            ["python", "main.py", "--mode", "redact", "--input", file_path, "--output", temp_output_path],
-            capture_output=True,
-            text=True
-        )
-
-        if result.returncode != 0:
-            print("Error running main.py:", result.stderr)
-            raise gr.Error("Error during document processing. Check logs.")
+        # Initialize detector, mapper, and handler INSIDE the GPU context
+        # so that GLiNER loads the model onto the dynamically assigned GPU
+        print("Initializing NLP Models on ZeroGPU...")
+        detector = HybridDetector(whitelist=WHITELIST)
+        mapper = StatefulMapper()
+        handler = DocxHandler(detector=detector, mapper=mapper)
+        
+        # Process the document
+        print("Starting document redaction...")
+        handler.process_document(file_path, temp_output_path)
+        print("Redaction complete.")
 
         if not os.path.exists(temp_output_path):
             raise gr.Error("Processed file was not generated.")
@@ -51,8 +71,8 @@ demo = gr.Interface(
     fn=redact_document,
     inputs=gr.File(label="Upload Original DOCX (Red Herring Prospectus)"),
     outputs=gr.File(label="Download Redacted DOCX"),
-    title="GhostWriter PII Redaction Engine",
-    description="Upload a `.docx` financial document. The local NLP engine will automatically detect and anonymize all PII (Names, Organizations, Addresses, Emails, Phones, URLs) using stateful synthetic surrogates while perfectly preserving table and paragraph formatting.",
+    title="GhostWriter PII Redaction Engine (ZeroGPU Accelerated)",
+    description="Upload a `.docx` financial document. The local NLP engine will automatically detect and anonymize all PII using stateful synthetic surrogates while perfectly preserving table and paragraph formatting. Accelerated by Hugging Face ZeroGPU.",
     allow_flagging="never"
 )
 
